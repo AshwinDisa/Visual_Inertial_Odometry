@@ -6,7 +6,7 @@ from feature import Feature
 
 import time
 from collections import namedtuple
-
+from scipy.spatial.transform import Rotation as R
 
 
 class IMUState(object):
@@ -237,17 +237,34 @@ class MSCKF(object):
         first few IMU readings.
         """
         # Initialize the gyro_bias given the current angular and linear velocity
-        ...
+        sum_angular_vel = np.zeros(3)
+        sum_linear_acc = np.zeros(3)
 
         # Find the gravity in the IMU frame.
-        ...
+        for imu_msg in self.imu_msg_buffer:
+            angular_vel = np.zeros(3)
+            linear_acc = np.zeros(3)
+
+            angular_vel = np.array([imu_msg.angular_velocity.x, imu_msg.angular_velocity.y, imu_msg.angular_velocity.z])
+            linear_acc = np.array([imu_msg.linear_acceleration.x, imu_msg.linear_acceleration.y, imu_msg.linear_acceleration.z])
+
+            sum_angular_vel += angular_vel
+            sum_linear_acc += linear_acc
+
+        self.state_server.imu_state.gyro_bias = sum_angular_vel / len(self.imu_msg_buffer)
+        gravity_imu = sum_linear_acc / len(self.imu_msg_buffer)
+
         
         # Normalize the gravity and save to IMUState          
-        ...
+        gravity_norm = np.linalg.norm(gravity_imu)
+        self.IMUState.gravity = np.array([0.0, 0.0, -gravity_norm])
+
 
         # Initialize the initial orientation, so that the estimation
         # is consistent with the inertial frame.
-        ...
+        q0_i_w = R.align_vectors(np.array([0, 0, -1]), gravity_imu)[0]
+        self.state_server.imu_state.orientation = q0_i_w.as_quat()
+
 
     # Filter related functions
     # (batch_imu_processing, process_model, predict_new_state)
