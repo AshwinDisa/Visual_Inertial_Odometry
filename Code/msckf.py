@@ -273,16 +273,26 @@ class MSCKF(object):
         # Execute process model.
         # Update the state info
         # Repeat until the time_bound is reached
-        ...
+        used_imu_msg_counter = 0
+        for imu_msg in self.imu_msg_buffer:
+            imu_time = imu_msg.timestamp
+            if imu_time < self.state_server.imu_state.timestamp:
+                used_imu_msg_counter += 1
+                continue
+            if imu_time > time_bound:
+                break
+            # Execute process model
+            self.process_model(imu_time, imu_msg.angular_velocity, imu_msg.linear_acceleration)
+            used_imu_msg_counter += 1
         
         # Set the current imu id to be the IMUState.next_id
-        ...
+        self.state_server.imu_state.id = IMUState.next_id
         
         # IMUState.next_id increments
-        ...
+        IMUState.next_id += 1
 
         # Remove all used IMU msgs.
-        ...
+        del self.imu_msg_buffer[:used_imu_msg_counter]
 
     def process_model(self, time, m_gyro, m_acc):
         """
@@ -387,13 +397,22 @@ class MSCKF(object):
         IMPLEMENT THIS!!!!!
         """
         # get the current imu state id and number of current features
-        ...
+        state_id = self.state_server.imu_state.id
+        curr_feature_num = len(self.map_server)
+        tracked_feature_num = 0
         
         # add all features in the feature_msg to self.map_server
-        ...
+        for feature in feature_msg.features:
+            if feature.id not in self.map_server:
+                self.map_server[feature.id] = Feature(feature.id)
+                self.map_server[feature.id].observations[state_id] = np.array([feature.u0, feature.v0, feature.u1, feature.v1])
+            else:
+                self.map_server[feature.id].observations[state_id] = np.array([feature.u0, feature.v0, feature.u1, feature.v1])
+                tracked_feature_num += 1
+            
 
         # update the tracking rate
-        ...
+        self.tracking_rate = tracked_feature_num / (curr_feature_num + 1e-5)
 
     def measurement_jacobian(self, cam_state_id, feature_id):
         """
