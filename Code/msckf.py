@@ -1058,6 +1058,13 @@ class MSCKF(object):
         R_w_c = imu_state.R_imu_cam0 @ T_i_w.R.T
         t_c_w = imu_state.position + T_i_w.R @ imu_state.t_cam0_imu
         T_c_w = Isometry3d(R_w_c.T, t_c_w)
+        
+        # print(f"T_b_w: {T_b_w.t} and R : {to_quaternion(T_b_w.R)}")
+        
+        quat = to_quaternion(T_c_w.R)
+        # Open a txt file to save the result
+        with open('Code/trajectory_results/trajectory_camera_estimate.txt', 'a') as f:
+            f.write(f"{time:.12f} {T_c_w.t[0]:.12f} {T_c_w.t[1]:.12f} {T_c_w.t[2]:.12f} {quat[0]:.12f} {quat[1]:.12f} {quat[2]:.12f} {quat[3]:.12f}\n")
 
         return namedtuple('vio_result', ['timestamp', 'pose', 'velocity', 'cam0_pose'])(
             time, T_b_w, body_velocity, T_c_w)
