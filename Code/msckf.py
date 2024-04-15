@@ -10,6 +10,9 @@ from scipy.spatial.transform import Rotation
 from scipy import sparse
 
 
+# Code reference: https://github.com/uoip/stereo_msckf/tree/master
+# Code reference: https://github.com/KumarRobotics/msckf_vio
+
 class IMUState(object):
     # id for next IMU state
     next_id = 0
@@ -263,7 +266,6 @@ class MSCKF(object):
         IMUState.gravity = np.array([0., 0., -gravity_norm])
 
         self.state_server.imu_state.orientation = from_two_vectors(-IMUState.gravity, gravity_imu)
-        
 
 
     # Filter related functions
@@ -653,7 +655,6 @@ class MSCKF(object):
         else:
             H_thin = H
             r_thin = r
-        
 
         # Compute the Kalman gain.
         P = self.state_server.state_cov
@@ -693,70 +694,6 @@ class MSCKF(object):
 
         # Fix the covariance to be symmetric
         self.state_server.state_cov = 0.5 * (state_cov + state_cov.T)
-        
-        # if len(H) == 0 or len(r) == 0:
-        #     return
-
-        # # Decompose the final Jacobian matrix to reduce computational
-        # # complexity as in Equation (28), (29).
-        # if H.shape[0] > H.shape[1]:
-        #     # QR decomposition
-        #     Q, R = np.linalg.qr(H, mode='reduced')  # if M > N, return (M, N), (N, N)
-        #     H_ = R         # shape (N, N)
-        #     r_ = Q.T @ r   # shape (N,)
-        # else:
-        #     H_ = H   # shape (M, N)
-        #     r_ = r   # shape (M)
-
-        # # Compute the Kalman gain.
-        # P = self.state_server.state_cov
-        # S = H_ @ P @ H_.T + (self.config.observation_noise *
-        #     np.identity(len(H_)))
-        # K_transpose = np.linalg.solve(S, H_ @ P)
-        # K = K_transpose.T   # shape (N, K)
-
-        # # Compute the error of the state.
-        # delta_x = K @ r_
-
-        # # Update the IMU state.
-        # delta_x_imu = delta_x[:21]
-
-        # if (np.linalg.norm(delta_x_imu[6:9]) > 0.5 or 
-        #     np.linalg.norm(delta_x_imu[12:15]) > 1.0):
-        #     print('[Warning] Update change is too large')
-
-        # dq_imu = small_angle_quaternion(delta_x_imu[:3])
-        # imu_state = self.state_server.imu_state
-        # imu_state.orientation = quaternion_multiplication(
-        #     dq_imu, imu_state.orientation)
-        # imu_state.gyro_bias += delta_x_imu[3:6]
-        # imu_state.velocity += delta_x_imu[6:9]
-        # imu_state.acc_bias += delta_x_imu[9:12]
-        # imu_state.position += delta_x_imu[12:15]
-
-        # dq_extrinsic = small_angle_quaternion(delta_x_imu[15:18])
-        # imu_state.R_imu_cam0 = to_rotation(dq_extrinsic) @ imu_state.R_imu_cam0
-        # imu_state.t_cam0_imu += delta_x_imu[18:21]
-
-        # # Update the camera states.
-        # for i, (cam_id, cam_state) in enumerate(
-        #         self.state_server.cam_states.items()):
-        #     delta_x_cam = delta_x[21+i*6:27+i*6]
-        #     dq_cam = small_angle_quaternion(delta_x_cam[:3])
-        #     cam_state.orientation = quaternion_multiplication(
-        #         dq_cam, cam_state.orientation)
-        #     cam_state.position += delta_x_cam[3:]
-
-        # # Update state covariance.
-        # I_KH = np.identity(len(K)) - K @ H_
-        # # state_cov = I_KH @ self.state_server.state_cov @ I_KH.T + (
-        # #     K @ K.T * self.config.observation_noise)
-        # state_cov = I_KH @ self.state_server.state_cov   # ?
-
-        # # Fix the covariance to be symmetric
-        # self.state_server.state_cov = (state_cov + state_cov.T) / 2.
-        
-        
 
     def gating_test(self, H, r, dof):
         P1 = H @ self.state_server.state_cov @ H.T
@@ -1059,12 +996,10 @@ class MSCKF(object):
         t_c_w = imu_state.position + T_i_w.R @ imu_state.t_cam0_imu
         T_c_w = Isometry3d(R_w_c.T, t_c_w)
         
-        # print(f"T_b_w: {T_b_w.t} and R : {to_quaternion(T_b_w.R)}")
-        
         quat = to_quaternion(T_c_w.R)
         # Open a txt file to save the result
-        with open('Code/trajectory_results/trajectory_camera_estimate.txt', 'a') as f:
-            f.write(f"{time:.12f} {T_c_w.t[0]:.12f} {T_c_w.t[1]:.12f} {T_c_w.t[2]:.12f} {quat[0]:.12f} {quat[1]:.12f} {quat[2]:.12f} {quat[3]:.12f}\n")
+        # with open('Code/trajectory_results/trajectory_camera_estimate.txt', 'a') as f:
+        #     f.write(f"{time:.12f} {T_c_w.t[0]:.12f} {T_c_w.t[1]:.12f} {T_c_w.t[2]:.12f} {quat[0]:.12f} {quat[1]:.12f} {quat[2]:.12f} {quat[3]:.12f}\n")
 
         return namedtuple('vio_result', ['timestamp', 'pose', 'velocity', 'cam0_pose'])(
             time, T_b_w, body_velocity, T_c_w)
