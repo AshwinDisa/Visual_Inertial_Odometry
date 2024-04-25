@@ -14,10 +14,11 @@ def main(args):
 
     # Initialize the Data Module
     data_module = TrajectoryDataModule(json_file=args.data_file, batch_size=args.batch_size, mode=args.mode)
+    print(len(data_module.train_dataloader().dataset))
 
     # Select the model based on the mode
     if args.mode == 'IO':
-        model = BidirectionalLSTM(input_dim=6, hidden_dim=64, output_dim=3, num_layers=2)
+        model = BidirectionalLSTM(input_dim=6, hidden_dim=256, output_dim=7, num_layers=2)
     else:
         raise ValueError("Unsupported mode! Use 'IO' for inertial odometry.")
 
@@ -56,4 +57,5 @@ if __name__ == '__main__':
     parser.add_argument('--fp16', action='store_true', help='Enable FP16 training')
 
     args = parser.parse_args()
+    print(args)
     main(args)
