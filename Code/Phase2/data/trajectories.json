@@ -1,0 +1,16 @@
+{
+    "trajectories": [
+        {
+            "trajectory_id": "trajectory_1",
+            "data_entries": "trajectory1_data.json",
+            "imu_readings": "trajectory1_imu_readings.csv",
+            "poses": "trajectory1_poses.csv"
+        },
+        {
+            "trajectory_id": "trajectory_2",
+            "data_entries": "trajectory2_data.json",
+            "imu_readings": "trajectory2_imu_readings.csv",
+            "poses": "trajectory2_poses.csv"
+        }
+    ]
+}

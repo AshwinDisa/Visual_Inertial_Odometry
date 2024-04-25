@@ -1,0 +1,18 @@
+{
+    "entries": [
+        {
+            "timestamp": 1588301234,
+            "images": ["trajectory1_image001.jpg", "trajectory1_image002.jpg"],
+            "imu_start_index": 1,
+            "imu_end_index": 10,
+            "pose_index": 1
+        },
+        {
+            "timestamp": 1588301254,
+            "images": ["trajectory1_image003.jpg", "trajectory1_image004.jpg"],
+            "imu_start_index": 11,
+            "imu_end_index": 20,
+            "pose_index": 2
+        }
+    ]
+}
