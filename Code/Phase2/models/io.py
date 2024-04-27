@@ -3,6 +3,23 @@ from torch import nn
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
+#Quaternion difference of two unit quaternions
+def quat_norm_diff(q_a, q_b):
+    assert(q_a.shape == q_b.shape)
+    assert(q_a.shape[-1] == 4)
+    if q_a.dim() < 2:
+        q_a = q_a.unsqueeze(0)
+        q_b = q_b.unsqueeze(0)
+    return torch.min((q_a-q_b).norm(dim=1), (q_a+q_b).norm(dim=1)).squeeze()
+
+def quat_squared_loss(q, q_target, reduce=True):
+    assert(q.shape == q_target.shape)
+    d = quat_norm_diff(q, q_target)
+    losses =  0.5*d*d
+    loss = losses.mean() if reduce else losses
+    return loss
+
+
 class BidirectionalLSTM(pl.LightningModule):
     def __init__(self, input_dim, hidden_dim, output_dim, num_layers, dropout_rate=0.5):
         super(BidirectionalLSTM, self).__init__()
@@ -17,6 +34,7 @@ class BidirectionalLSTM(pl.LightningModule):
         self.cosine_loss = nn.CosineEmbeddingLoss()
 
     def forward(self, x):
+        # print(x.shape)
         lstm_out, _ = self.lstm(x)
         last_time_step = lstm_out[:, -1, :]
         output = self.out_layer(last_time_step)
@@ -41,28 +59,34 @@ class BidirectionalLSTM(pl.LightningModule):
 
         # Combine losses
         total_loss = position_loss + quaternion_loss
-        return total_loss
+        return total_loss        
 
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
         loss = self.custom_loss(y_hat, y)
-        self.log('train_loss', loss)
+        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
+    
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
         loss = self.custom_loss(y_hat, y)
-        self.log('val_loss', loss)
+        # print(f"Y_hat: {y_hat} and Y: {y} and Loss: {loss}")
+        self.log('val_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
     def test_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
         loss = self.custom_loss(y_hat, y)
-        self.log('test_loss', loss)
+        self.log('test_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
+    
+    def epoch_end(self, outputs, phase):
+        avg_loss = torch.stack([x for x in outputs]).mean()
+        self.log(f'{phase}_loss', avg_loss)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
