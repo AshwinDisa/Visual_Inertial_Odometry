@@ -1,0 +1,10 @@
+{
+    "trajectories": [
+        {
+            "trajectory_id": "trajectory_3",
+            "data_entries": "data/Trajectories/trajectory_3/trajectory3_data.json",
+            "imu_readings": "data/Trajectories/trajectory_3/trajectory3_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_3/trajectory3_poses.csv"
+        }
+    ]
+}

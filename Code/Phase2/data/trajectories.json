@@ -1,0 +1,67 @@
+{
+    "trajectories": [
+        {
+            "trajectory_id": "trajectory_1",
+            "data_entries": "data/Trajectories/trajectory_1/trajectory1_data.json",
+            "imu_readings": "data/Trajectories/trajectory_1/trajectory1_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_1/trajectory1_poses.csv"
+        },
+        {
+            "trajectory_id": "trajectory_2",
+            "data_entries": "data/Trajectories/trajectory_2/trajectory2_data.json",
+            "imu_readings": "data/Trajectories/trajectory_2/trajectory2_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_2/trajectory2_poses.csv"
+        },
+        {
+            "trajectory_id": "trajectory_4",
+            "data_entries": "data/Trajectories/trajectory_4/trajectory4_data.json",
+            "imu_readings": "data/Trajectories/trajectory_4/trajectory4_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_4/trajectory4_poses.csv"
+        },
+        {
+            "trajectory_id": "trajectory_7",
+            "data_entries": "data/Trajectories/trajectory_7/trajectory7_data.json",
+            "imu_readings": "data/Trajectories/trajectory_7/trajectory7_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_7/trajectory7_poses.csv"
+        },
+        {
+            "trajectory_id": "trajectory_8",
+            "data_entries": "data/Trajectories/trajectory_8/trajectory8_data.json",
+            "imu_readings": "data/Trajectories/trajectory_8/trajectory8_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_8/trajectory8_poses.csv"
+        }
+    ],
+    "buffer":
+    [
+        {
+            "trajectory_id": "trajectory_1",
+            "data_entries": "data/Trajectories/trajectory_1/trajectory1_data.json",
+            "imu_readings": "data/Trajectories/trajectory_1/trajectory1_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_1/trajectory1_poses.csv"
+        },
+        {
+            "trajectory_id": "trajectory_2",
+            "data_entries": "data/Trajectories/trajectory_2/trajectory2_data.json",
+            "imu_readings": "data/Trajectories/trajectory_2/trajectory2_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_2/trajectory2_poses.csv"
+        },
+        {
+            "trajectory_id": "trajectory_4",
+            "data_entries": "data/Trajectories/trajectory_4/trajectory4_data.json",
+            "imu_readings": "data/Trajectories/trajectory_4/trajectory4_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_4/trajectory4_poses.csv"
+        },
+        {
+            "trajectory_id": "trajectory_7",
+            "data_entries": "data/Trajectories/trajectory_7/trajectory7_data.json",
+            "imu_readings": "data/Trajectories/trajectory_7/trajectory7_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_7/trajectory7_poses.csv"
+        },
+        {
+            "trajectory_id": "trajectory_8",
+            "data_entries": "data/Trajectories/trajectory_8/trajectory8_data.json",
+            "imu_readings": "data/Trajectories/trajectory_8/trajectory8_imu_readings.csv",
+            "poses": "data/Trajectories/trajectory_8/trajectory8_poses.csv"
+        }
+    ]
+}

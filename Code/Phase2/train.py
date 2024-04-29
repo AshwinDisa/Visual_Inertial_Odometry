@@ -6,6 +6,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, ModelSummary
 # from utils.data_module import TrajectoryDataModule
 from models.io import BidirectionalLSTM
 from models.vo import VisualOdometry
+from models.vio import VisualInertialOdometry, VisualInertialOdometry2
 
 from pytorch_lightning import LightningDataModule
 import torch.utils.data as data
@@ -50,7 +51,7 @@ class TrajectoryDataModule(LightningDataModule):
 
 def main(args):
     # Create a directory for trained weights if it doesn't exist
-    model_dir = f"trained_weights/freezed_{args.mode}"
+    model_dir = f"trained_weights/final_geodesic_{args.mode}"
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
@@ -60,18 +61,31 @@ def main(args):
     # Select the model based on the mode
     if args.mode == 'IO':
         model = BidirectionalLSTM(input_dim=6, hidden_dim=256, output_dim=7, num_layers=2)
+        
     elif args.mode == 'VO':
         model = VisualOdometry()
-        weights = torch.load("pretrained/gmflownet-kitti.pth", map_location='cuda')
+        weights = torch.load("pretrained/gmflownet-kitti.pth", map_location='cpu')
         
-        # print(f"{model.state_dict().keys()}\n\n")
         for key in weights.keys():
-            # print(key.replace('module.', ''))
             if key.replace('module.', '') in model.state_dict().keys():
-                # print(f"Copying {key} to {key.replace('module.', '')}")
                 model.state_dict()[key.replace('module.', '')] = weights[key]
                 
         model.freeze_fnet()  # Freeze fnet after loading the model
+        
+    elif args.mode == 'VIO':
+        model = VisualInertialOdometry2(input_dim_inertial=6, hidden_dim_inertial=256, num_layers=2)
+        weights = torch.load("pretrained/gmflownet-kitti.pth", map_location='cpu')
+        lstm_weights = torch.load("trained_weights/final_geodesic_IO/Geodesic/186-0.00484.ckpt", map_location='cpu')['state_dict']
+        
+        for key in weights.keys():
+            if key.replace('module.', '') in model.state_dict().keys():
+                model.state_dict()[key.replace('module.', '')] = weights[key]
+           
+        for key in lstm_weights.keys():
+            if key.replace('lstm.', 'lstm_inertial.') in model.state_dict().keys():
+                model.state_dict()[key.replace('lstm.', 'lstm_inertial.')] = lstm_weights[key]     
+          
+        # model.freeze_fnet()  # Freeze fnet after loading the model
         
     else:
         raise ValueError("Unsupported mode! Use 'IO' for inertial odometry.")
@@ -83,7 +97,7 @@ def main(args):
     checkpoint_callback = ModelCheckpoint(
         dirpath=model_dir,
         filename='{epoch}-{val_loss:.5f}',
-        save_top_k=1,  # saves only the best model
+        save_top_k=3,  # saves only the best model
         monitor='val_loss',  # metric to monitor
         mode='min',  # mode of the monitored quantity for optimization
         auto_insert_metric_name=False  # prevent automatic insertion of the metric name in the filename
@@ -95,7 +109,8 @@ def main(args):
         logger=logger,
         callbacks=[checkpoint_callback],
         precision=16 if args.fp16 else 32,
-        devices=args.gpus
+        devices=args.gpus,
+        log_every_n_steps=10
     )
     
     # Train the model
@@ -105,7 +120,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train models for different modalities")
     parser.add_argument('--data_file', type=str, required=True, help='Path to the data file')
-    parser.add_argument('--batch_size', type=int, default=16, help='Input batch size for training')
+    parser.add_argument('--batch_size', type=int, default=32, help='Input batch size for training')
     parser.add_argument('--mode', type=str, choices=['VO', 'IO', 'VIO'], required=True, help='Mode of operation: VO, IO, or VIO')
     parser.add_argument('--epochs', type=int, default=50, help='Number of epochs to train')
     parser.add_argument('--gpus', type=int, default=1, help='Number of GPUs')
